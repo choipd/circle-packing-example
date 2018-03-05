@@ -1,0 +1,29 @@
+{
+  "name": "CirclePackingExample",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "test": "jest"
+  },
+  "dependencies": {
+    "lodash": "^4.17.5",
+    "parse-svg-path": "^0.1.2",
+    "react": "^16.3.0-alpha.1",
+    "react-native": "0.54.0",
+    "react-native-get-pixel": "^0.0.5",
+    "react-native-svg": "^6.2.2",
+    "simplify-path": "^1.1.0",
+    "svg-path-contours": "^2.0.0",
+    "triangulate-contours": "^1.0.2"
+  },
+  "devDependencies": {
+    "babel-jest": "22.4.1",
+    "babel-preset-react-native": "4.0.0",
+    "jest": "22.4.2",
+    "react-test-renderer": "^16.3.0-alpha.1"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}
