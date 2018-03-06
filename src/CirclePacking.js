@@ -82,6 +82,7 @@ class CirclePacking extends Component {
           this.retryCount++
           this.getRandomCircle(keyword)
         }
+        this.setState({points: this.circles})
       } else {
         this.retryCount++
         this.getRandomCircle(keyword)
