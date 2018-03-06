@@ -14,7 +14,7 @@ import Svg, {
 
 import { getPixelRGBA } from 'react-native-get-pixel'
 
-const bgImage = require('./images/Heart_1-3.png')
+const MASKING_IMAGE = 'Heart.png'
 
 // create a component
 class CirclePacking extends Component {
@@ -30,8 +30,33 @@ class CirclePacking extends Component {
     this.fontRatio = 8
     this.retryCount = 0
 
+    const temperature = this.props.temperature || 1
+
+    let colors, opacities, positions
+
+    if (temperature > 3 && temperature < 7) {
+      colors = ['#c886ff', '#ff90aa']
+      opacities = [1, 1]
+      positions = ['100%', '0%', '0%', '100%']
+    } else if (temperature > 6 && temperature < 11) {
+      colors = ['#ffa576', '#ff5991']
+      opacities = [1, 1]
+      positions = ['100%', '0%', '0%', '100%']
+    } else {
+      colors = ['#5e57f9', '#f957dc']
+      opacities = [1, .4]
+      positions = ['0%', '100%', '100%', '0%']
+    }
+
+
     this.state = {
+      debug: this.props.debug ? true : false,
+      temperature,
+      colors,
+      opacities,
+      positions,
       points: [],
+      distanceFromPath: this.props.distanceFromPath || 0,
       shape: this.getShapeFromPath(this.pathData)
     }
   }
@@ -67,7 +92,7 @@ class CirclePacking extends Component {
     
     const circle = {x: posX, y: posY, r: length, keyword}
     
-    getPixelRGBA('Heart.png', posX, posY)
+    getPixelRGBA(MASKING_IMAGE, posX, posY)
     .then(color => {
       if(color[0] > 0 || color[1] > 0 || color[2] > 0) {
         // console.log(posX, posY, color)
@@ -99,7 +124,7 @@ class CirclePacking extends Component {
   checkInsideShape = (circle) => {
     // console.log('this.state.shape = ', this.state.shape)
     return !this.state.shape.positions.some(point => {
-      return Math.sqrt(Math.pow(circle.x - point[0], 2) + Math.pow(circle.y - point[1], 2)) < circle.r
+      return Math.sqrt(Math.pow(circle.x - point[0], 2) + Math.pow(circle.y - point[1], 2)) < circle.r + this.state.distanceFromPath
     })
   }
 
@@ -122,55 +147,62 @@ class CirclePacking extends Component {
   }
 
   render() {
-    const { width, height } = this.props.style
-    
+    const { width, height } = this.props.style  
+    const { colors, opacities, positions } = this.state
 
     return (
       <View style={styles.container}>
-        {/* <ImageBackground 
-          source={bgImage}
-          style={{width, height}}
-        > */}
-          <Svg
-            height={height} 
-            width={width}
-            // viewBox="0 0 360 300"
-          >
-            <Defs>
-              <LinearGradient id="grad" x1="0" y1="0" x2="112" y2="112">
-                <Stop offset="0" stopColor="#ffa576" stopOpacity="0.0" />
-                <Stop offset="1" stopColor="#ff5991" stopOpacity="0.5" />
-              </LinearGradient>
-              <LinearGradient id="fill-1-a" x1="100%" x2="1.022%" y1="0%" y2="98.978%">
-                <Stop offset="0" stopColor="#FFA476"/>
-                <Stop offset="1" stopColor="#FF5991"/>
-              </LinearGradient>
-            </Defs>
-            <Path fill="#FFF" fillOpacity=".01" fillRule="evenodd" stroke="url(#fill-1-a)" strokeWidth="1.5" d={this.pathData} opacity=".51" transform="translate(1 1)"/>
+        <Svg
+          height={height} 
+          width={width}
+        >
+          <Defs>
+            <LinearGradient id="path" x1={positions[0]} y1={positions[1]} x2={positions[2]} y2={positions[3]}>
+              <Stop offset="0" stopColor={colors[0]} stopOpacity={opacities[0]} />
+              <Stop offset="1" stopColor={colors[1]} stopOpacity={opacities[1]} />
+            </LinearGradient>
+            <LinearGradient id="circleFill" x1={positions[0]} y1={positions[1]} x2={positions[2]} y2={positions[3]}>
+              <Stop offset="0" stopColor={colors[0]} stopOpacity={opacities[0]}/>
+              <Stop offset="1" stopColor={colors[1]} stopOpacity={opacities[1]}/>
+            </LinearGradient>
+          </Defs>
+          <Path fill="#FFF" fillOpacity=".01" fillRule="evenodd" stroke="url(#path)" strokeWidth="1.5" d={this.pathData} opacity=".51" transform="translate(1 1)"/>
 
-            { 
-              this.state.points.map(item=>{
-                return (
-                  <G key={item.keyword}>
-                  <Circle cx={item.x} cy={item.y} r={item.r} strokeWidth="2.5" fill="url(#fill-1-a)" onPress={()=>this.selectKeyword(item)}>
-                  </Circle>
-                  <Text fill="#FFF" fontSize="15" fontWeight="bold" x={item.x} y={item.y} textAnchor="middle">{item.keyword}</Text>
-                  </G>
-                )
-              })
-            }
+          { 
+            this.state.points.map(item=>{
+              return (
+                <G key={item.keyword}>
+                <Circle cx={item.x} cy={item.y} r={item.r} strokeWidth="2.5" fill="url(#circleFill)" opacity=".59" onPress={()=>this.selectKeyword(item)}>
+                </Circle>
+                <Text 
+                  fill="#FFF" 
+                  fontSize="13" 
+                  x={item.x} 
+                  y={item.y} 
+                  textAnchor="middle"
+                  fontFamily="Roboto-Regular"
+                  lineHeight="22"
+                  alignmentBaseline="middle"
+                >
+                  {item.keyword}
+                </Text>
+                </G>
+              )
+            })
+          }
 
-            {
-              this.state.shape.positions.map(point => {
-                return (
-                  <G key={point.join('_')}>
-                  <Circle cx={point[0]} cy={point[1]} r={3} strokeWith="1" fill="#FF0000" />
-                  </G>
-                )
-              })              
-            }
-          </Svg>
-        {/* </ImageBackground> */}
+          {
+            this.state.debug ? 
+            this.state.shape.positions.map(point => {
+              return (
+                <G key={point.join('_')}>
+                <Circle cx={point[0]} cy={point[1]} r={3} strokeWith="1" fill="#FF0000" />
+                </G>
+              )
+            })              
+            : null
+          }
+        </Svg>
       </View>
     );
   }
